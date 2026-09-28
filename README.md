@@ -6,12 +6,14 @@
 
 ```
 github-io-blog/
-├── index.html        # 首页（文章列表）
-├── about.html        # 关于页
-├── posts/            # 每篇文章一个 HTML 文件
+├── index.html              # 首页（文章列表）
+├── about.html              # 关于页
+├── 404.html                # 404 页
+├── posts/                  # 每篇文章一个 HTML 文件
+│   └── dengbao2-0.html     # 《我对等保2.0的理解》
 ├── assets/
-│   ├── css/style.css # 全局样式（含亮/暗色主题）
-│   └── js/main.js    # 主题切换 + 页脚年份
+│   ├── css/style.css       # 全局样式（含亮/暗色主题、表格）
+│   └── js/main.js          # 主题切换 + 页脚年份
 └── README.md
 ```
 
@@ -50,5 +52,6 @@ python -m http.server 8000
 - **改名字 / 简介**：编辑 `index.html` 里的 `<title>`、`hero` 区块文字、头像字母。
 - **换社交链接**：改 `index.html` 和 `about.html` 里的 `#` / 占位地址。
 - **改配色**：编辑 `assets/css/style.css` 顶部 `:root` 与 `[data-theme="dark"]` 的变量。
-- **加文章**：复制 `posts/post-1.html`，改内容后到 `index.html` 加一张卡片。
+- **加文章**：复制 `posts/dengbao2-0.html`，改内容后到 `index.html` 加一张卡片。
+- **发文更新线上**：改完后在本目录执行 `git add -A && git commit -m "new post" && git push`。
 - **绑定自定义域名**：在仓库放一个 `CNAME` 文件，内容为你的域名，并在域名 DNS 处加一条 `CNAME` 记录指向 `Tiantiankaixin6666.github.io`。
