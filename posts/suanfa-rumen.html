@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>算法入门：它到底是什么，又该怎么衡量 · Tiantiankaixin6666 的技术博客</title>
+  <meta name="description" content="原创。从生活化的例子讲清楚算法是什么，以及用大 O 表示法衡量一个算法的好坏；并用「两数之和」和「二分查找」两个例子对比不同解法的效率。" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="../index.html">Tiantiankaixin6666</a>
+      <div class="nav-links">
+        <a href="../index.html">首页</a>
+        <a href="../about.html">关于</a>
+        <button class="theme-btn" id="theme-toggle" aria-label="切换主题">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <article class="post-header">
+      <h1>算法入门：它到底是什么，又该怎么衡量</h1>
+      <div class="meta" style="color:var(--muted);font-size:.88rem;margin-bottom:8px;">2026-09-28 · 算法 / 原创</div>
+    </article>
+
+    <article class="post-body">
+      <p>很多人一听到"算法"就觉得高深，其实它离生活很近。本文想把这层神秘感拆掉：先说清算法到底是什么，再说怎么判断一个算法"好不好"，最后用两个小例子体会不同解法之间的差距。</p>
+
+      <h2>一、算法就是"做一件事的步骤"</h2>
+      <p>算法（Algorithm）本质上是一组<strong>明确、有限、可重复执行</strong>的步骤，用来把某个输入变成期望的输出。它不局限于计算机——你早上冲一杯咖啡的流程，就是一套算法：烧水、研磨、注水、等待……每一步都清楚，顺序也对，最终结果稳定。</p>
+      <p>放到编程里，算法解决的是"给定一个问题时，计算机该按什么步骤算"这件事。同一个问题常常有多种算法，区别就在<strong>快慢</strong>和<strong>占多少内存</strong>。</p>
+
+      <h2>二、好算法的三个标准</h2>
+      <ul>
+        <li><strong>正确性</strong>：对，能给出正确答案，边界情况也不崩。</li>
+        <li><strong>可读性</strong>：人能看懂、好维护。炫技但没人能改的代码不是好算法。</li>
+        <li><strong>效率</strong>：也就是时间和空间开销——这恰恰是衡量算法好坏最核心、也最容易拉开差距的地方。</li>
+      </ul>
+
+      <h2>三、怎么衡量效率：时间复杂度与大 O</h2>
+      <p>我们没法用"跑了几秒"来衡量效率——因为机器快慢、数据大小都会影响结果。真正公平的办法是看<strong>随着输入规模 n 增大，操作次数怎么增长</strong>，这就是<strong>时间复杂度</strong>，通常用<strong>大 O 表示法</strong>描述最坏情况下的增长趋势。</p>
+      <p>几个最常见的量级（从上到下越来越快）：</p>
+      <ul>
+        <li><code>O(n²)</code>：两层循环，n 翻倍操作数约变 4 倍；</li>
+        <li><code>O(n)</code>：扫一遍，随 n 线性增长；</li>
+        <li><code>O(log n)</code>：每次砍掉一半，数据翻很多倍也只多几步；</li>
+        <li><code>O(1)</code>：无论数据多大，一步到位。</li>
+      </ul>
+      <blockquote>大 O 看的是"增长趋势"而非精确次数，所以它帮我们忽略常数差异、抓住主要矛盾：当 n 很大时，<code>O(n)</code> 一定远胜 <code>O(n²)</code>。</blockquote>
+
+      <h2>四、例子一：两数之和</h2>
+      <p>问题：给一个整数数组和一个目标值，找出<strong>和为目标值</strong>的两个数的下标。比如 <code>nums = [2, 7, 11, 15]</code>，<code>target = 9</code>，答案应是 <code>[0, 1]</code>。</p>
+
+      <p><strong>解法 A：暴力枚举</strong></p>
+      <p>把每两个数都配一遍，看和是否等于目标。两层循环，时间复杂度 <code>O(n²)</code>。</p>
+      <pre><code>def two_sum_brute(nums, target):
+    n = len(nums)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if nums[i] + nums[j] == target:
+                return [i, j]
+    return []</code></pre>
+
+      <p><strong>解法 B：哈希表</strong></p>
+      <p>边遍历边把"数值 → 下标"记进哈希表；每次只看"还差多少"（<code>target - 当前数</code>）是否已经出现过。只扫一遍，时间复杂度 <code>O(n)</code>。</p>
+      <pre><code>def two_sum_hash(nums, target):
+    seen = {}
+    for i, x in enumerate(nums):
+        if target - x in seen:
+            return [seen[target - x], i]
+        seen[x] = i
+    return []</code></pre>
+      <p>同样是正确答案，数据量从几千涨到几万时，<code>O(n²)</code> 的解会慢成百上千倍，而 <code>O(n)</code> 的解几乎不受影响——这就是算法"好坏"的直观差距。</p>
+
+      <h2>五、例子二：二分查找</h2>
+      <p>问题：在一个<strong>已排好序</strong>的数组里找某个数。最笨的做法是从头扫到尾，<code>O(n)</code>。但既然有序，我们可以每次都和<strong>中间</strong>的数比：比目标大就扔掉右半边，比目标小就扔掉左半边，不断把范围砍半。这就是<strong>二分查找</strong>，时间复杂度 <code>O(log n)</code>。</p>
+      <pre><code>def binary_search(nums, target):
+    lo, hi = 0, len(nums) - 1
+    while lo &lt;= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] &lt; target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1</code></pre>
+      <p>10 亿个数里找一个数，线性查找最坏要 10 亿步，二分查找只要约 30 步（因为 2³⁰ ≈ 10 亿）。这就是 <code>O(log n)</code> 的威力。</p>
+
+      <h2>六、小结</h2>
+      <p>算法不是玄学，它只是"把事情做对的步骤"。判断一个算法好不好，最实用的标尺是<strong>时间复杂度</strong>：先想清楚它随数据量怎么增长，再决定要不要用。入门阶段不必死记所有算法，先把"同一问题能有多种解法、解法之间效率天差地别"这件事刻进直觉，后面学排序、图、动态规划就会顺很多。</p>
+      <blockquote>本文为原创，旨在用最直白的方式建立对算法的第一印象；具体实现与进阶内容可在后续文章中展开。</blockquote>
+
+      <a class="back-link" href="../index.html">← 返回首页</a>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      © <span id="year">2026</span> Tiantiankaixin6666 · 由纯静态页面驱动 · Powered by GitHub Pages
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>
