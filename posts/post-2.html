@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我如何理解 CSS 变量与暗色模式 · Tiantiankaixin6666的技术博客</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="../index.html">Tiantiankaixin6666<span>的博客</span></a>
+      <div class="nav-links">
+        <a href="../index.html">首页</a>
+        <a href="../about.html">关于</a>
+        <button class="theme-btn" id="theme-toggle" aria-label="切换主题">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <article class="post-header">
+      <h1>我如何理解 CSS 变量与暗色模式</h1>
+      <div class="meta" style="color:var(--muted);font-size:.88rem;margin-bottom:8px;">2026-09-10 · 前端</div>
+    </article>
+
+    <article class="post-body">
+      <p>暗色模式听起来高级，做起来其实就三件事：<strong>定义变量、切换属性、记住选择</strong>。</p>
+
+      <h2>1. 用变量统一颜色</h2>
+      <p>把所有颜色抽到 <code>:root</code> 里，页面里只引用变量名。切换主题时，只要改 <code>data-theme</code> 这一个属性即可。</p>
+      <pre><code>:root {
+  --bg: #ffffff;
+  --text: #1a1a2e;
+}
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --text: #e2e8f0;
+}</code></pre>
+
+      <h2>2. 一行 JS 切换并记忆</h2>
+      <p>读取本地存储，没有就跟随系统；点按钮时切换属性并存回 <code>localStorage</code>。</p>
+      <pre><code>var theme = localStorage.getItem("theme")
+  || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+document.documentElement.setAttribute("data-theme", theme);</code></pre>
+
+      <h2>3. 别忘了过渡</h2>
+      <p>给 <code>body</code> 加上 <code>transition: background .3s, color .3s</code>，切换时才有顺滑的淡入淡出，而不是硬切。</p>
+
+      <blockquote>主题切换的本质，是一次性的属性替换，不是一堆 if/else。</blockquote>
+
+      <p>就这么简单。本博客的右上角按钮，就是按这个思路实现的，你可以打开源码对照看。</p>
+
+      <a class="back-link" href="../index.html">← 返回首页</a>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      © <span id="year">2026</span> Tiantiankaixin6666 · 由纯静态页面驱动 · Powered by GitHub Pages
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>
