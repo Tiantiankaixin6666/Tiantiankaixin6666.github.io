@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>【算法】算法简要介绍 · Tiantiankaixin6666 的技术博客</title>
+  <meta name="description" content="转载自 CSDN 作者 qq_45791939 的《算法简要介绍》，系统梳理排序、查找、图、动态规划、贪心、分治、回溯、字符串匹配、位运算、数论等十大类常见算法。" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="../index.html">Tiantiankaixin6666</a>
+      <div class="nav-links">
+        <a href="../index.html">首页</a>
+        <a href="../about.html">关于</a>
+        <button class="theme-btn" id="theme-toggle" aria-label="切换主题">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <article class="post-header">
+      <h1>【算法】算法简要介绍</h1>
+      <div class="meta" style="color:var(--muted);font-size:.88rem;margin-bottom:8px;">2026-09-28 · 算法 / 转载</div>
+    </article>
+
+    <article class="post-body">
+      <div class="reprint-notice">
+        <span class="label">转载声明</span>
+        <strong>本文为转载内容，版权归原作者所有，并非本站原创。</strong><br />
+        原作者：CSDN <code>qq_45791939</code><br />
+        原文标题：《【算法】算法简要介绍》<br />
+        原文链接：<a href="https://blog.csdn.net/qq_45791939/article/details/145038054" target="_blank" rel="noopener">https://blog.csdn.net/qq_45791939/article/details/145038054</a><br />
+        原文发布时间：2025-03-14（原创）<br />
+        转载旨在方便学习与记录，如原作者或平台不同意转载，请联系本站删除。
+      </div>
+
+      <p>算法是解决特定问题的方法和步骤，它可以根据问题的不同性质和解决思路进行分类。以下是一些常见的算法及其简介，涵盖排序、查找/搜索、动态规划、贪心、回溯、分治、图算法、树算法、字符串匹配算法等。</p>
+
+      <h2>一、排序算法 (Sorting Algorithms)</h2>
+      <p>排序算法的目的是将一组数据按照某种顺序（通常是升序或降序）排列。常见的算法有：</p>
+      <ul>
+        <li><strong>冒泡排序 (Bubble Sort)</strong>：通过重复比较相邻元素并交换，逐步将最大元素"冒泡"到序列末尾。</li>
+        <li><strong>选择排序 (Selection Sort)</strong>：将序列分为有序和无序部分，在无序部分中找到最小元素，加入到有序部分的后面，直到整个序列有序。</li>
+        <li><strong>插入排序 (Insertion Sort)</strong>：将序列分为有序和无序部分，把无序部分的每个元素插入到有序部分的适当位置，类似于扑克牌整理。</li>
+        <li><strong>希尔排序 (Shell Sort)</strong>：插入排序的优化算法，通过将数据按一定间隔分组，在分组内分别做插入排序，逐渐减小间隔直至 1，最终成为原始插入排序，但此时数组更有序，排序更快。</li>
+        <li><strong>归并排序 (Merge Sort)</strong>：采用分治法，将数组分成两半，递归地对每一半进行排序，然后合并。</li>
+        <li><strong>快速排序 (Quick Sort)</strong>：通过选择一个基准元素，将数组分成两部分（左边比基准小，右边比基准大），然后递归地对基准左右两边的序列再排序。</li>
+        <li><strong>堆排序 (Heap Sort)</strong>：基于堆数据结构的选择排序算法，通过将待排序序列构建成最大堆或最小堆，反复取出堆顶元素并调整堆，直至完成排序。</li>
+        <li><strong>计数排序 (Counting Sort)</strong>：一种非比较型整数排序算法，通过统计每个元素出现的次数，利用累加计数来确定元素的正确位置，适用于数据范围较小的情况。</li>
+        <li><strong>桶排序 (Bucket Sort)</strong>：将数据划分到有限数量的桶中，对每个桶内的数据进行排序，然后合并结果。</li>
+      </ul>
+
+      <h2>二、查找算法 (Search Algorithms)</h2>
+      <p>查找算法用于在数据中查找特定元素。常见的查找算法有：</p>
+      <ul>
+        <li><strong>线性查找 (Linear Search)</strong>：逐个元素检查，直到找到目标。时间复杂度：O(n)。</li>
+        <li><strong>二分查找 (Binary Search)</strong>：在已排序的数组中，通过反复将查找区间对半分来查找目标元素。时间复杂度：O(log n)。</li>
+        <li><strong>哈希查找 (Hash Search)</strong>：使用哈希表将数据映射到某个索引位置，以快速查找。时间复杂度：最好情况 O(1)，最坏情况 O(n)。</li>
+      </ul>
+
+      <h2>三、图算法 (Graph Algorithms)</h2>
+      <p>图算法是用于处理图结构数据（由节点和边组成）的算法，广泛应用于网络、路径规划、社交网络分析等领域。常见的图算法包括：</p>
+      <p><strong>图的遍历算法：</strong></p>
+      <ul>
+        <li><strong>深度优先搜索 (DFS)</strong>：从一个节点出发，沿着图的分支尽可能深地搜索，直到遇到终点或无路可走。</li>
+        <li><strong>广度优先搜索 (BFS)</strong>：从一个节点出发，首先访问所有相邻节点，然后再访问它们的相邻节点，以此类推。</li>
+      </ul>
+      <p><strong>最短路径算法：</strong></p>
+      <ul>
+        <li><strong>Dijkstra 算法</strong>：用于计算图中从起点到各个节点的最短路径，适用于边权非负的图。</li>
+        <li><strong>Bellman-Ford 算法</strong>：计算单源最短路径，能够处理边权为负的情况，但不适用于存在负权环的图。</li>
+        <li><strong>Floyd-Warshall 算法</strong>：用于计算图中所有节点对之间的最短路径，适用于有负权边但无负权环的图。</li>
+      </ul>
+      <p><strong>最小生成树算法：</strong></p>
+      <ul>
+        <li><strong>最小生成树</strong>：在一个连通加权无向图中，选取一部分边构成一棵树，使得这棵树包含所有顶点，且所有边的权重之和最小。</li>
+        <li><strong>Prim 算法</strong>：从一个节点开始，逐步添加权值最小的边，直到连接所有节点，形成最小生成树。</li>
+        <li><strong>Kruskal 算法</strong>：将图的边按权值从小到大排序，逐一添加到生成树中，确保不形成环，直到包含所有节点。</li>
+      </ul>
+      <p><strong>拓扑排序算法：</strong></p>
+      <ul>
+        <li><strong>拓扑排序</strong>：对有向无环图（DAG）进行排序，使得对于每一条有向边 (u, v)，节点 u 在节点 v 之前。</li>
+      </ul>
+      <p><strong>图的连通性算法：</strong></p>
+      <ul>
+        <li><strong>并查集算法</strong>：用于处理图的连通性问题，支持合并和查询操作。</li>
+      </ul>
+
+      <h2>四、动态规划 (Dynamic Programming)</h2>
+      <p>动态规划用于通过将问题分解成子问题来优化计算。常见的动态规划问题有：</p>
+      <ul>
+        <li><strong>背包问题 (Knapsack Problem)</strong>：在给定的背包容量下，选择物品使得总价值最大。</li>
+        <li><strong>最长公共子序列 (LCS)</strong>：找到两个序列的最长公共子序列。</li>
+        <li><strong>最短路径问题</strong>：如单源最短路径、Floyd-Warshall 算法等。</li>
+        <li><strong>编辑距离 (Edit Distance)</strong>：将一个字符串转换成另一个字符串所需的最小操作次数。</li>
+        <li><strong>爬楼梯问题</strong>：计算到达楼顶的不同方式数量。</li>
+        <li><strong>最大子序列和问题</strong>：寻找连续子数组的最大和。</li>
+      </ul>
+
+      <h2>五、贪心算法 (Greedy Algorithms)</h2>
+      <p>贪心算法通过选择当前最优解来构造全局最优解，适用于一些具有贪心选择性质的问题。常见的贪心算法问题有：</p>
+      <ul>
+        <li><strong>活动选择问题</strong>：选择不重叠的活动，使得选择的活动数最多。</li>
+        <li><strong>霍夫曼编码 (Huffman Coding)</strong>：用于无损数据压缩，通过频率构造最优二叉树。</li>
+        <li><strong>最小生成树问题 (MST)</strong>：如 Kruskal 和 Prim 算法。</li>
+        <li><strong>区间调度问题</strong>：在一组区间中选择尽量多的没有重叠的区间。</li>
+      </ul>
+
+      <h2>六、分治算法 (Divide and Conquer)</h2>
+      <p>分治法将问题分成若干子问题，并递归地解决这些子问题，最终合并结果。常见的分治算法问题有：</p>
+      <ul>
+        <li><strong>归并排序 (Merge Sort)</strong>：将数组分成两半递归排序后合并。</li>
+        <li><strong>快速排序 (Quick Sort)</strong>：选择基准元素将数组分割成两部分，然后递归排序。</li>
+        <li><strong>最大子数组和问题</strong>：通过分治法寻找最大和的子数组。</li>
+      </ul>
+
+      <h2>七、回溯算法 (Backtracking)</h2>
+      <p>一种穷举搜索算法，用于系统地搜索问题的所有可能解。它的核心思想是<strong>试探和回退</strong>：从问题的初始状态出发，逐步尝试所有可能的路径，如果发现当前路径无法达到目标，则回退到上一步，尝试其他路径。有时需要通过剪枝，屏蔽掉一些不可能的情况。回溯法通常通过递归实现，常见的回溯问题包括组合、排列、子集、分割和搜索问题，每种问题都有其特定的终止条件和剪枝策略。常见的回溯问题有：</p>
+      <ul>
+        <li><strong>八皇后问题</strong>：在一个 8×8 的棋盘上摆放 8 个皇后，使得它们互不攻击。</li>
+        <li><strong>全排列问题</strong>：生成给定数组的所有排列。</li>
+        <li><strong>数独问题</strong>：填充数独的空白格子，使得每行、每列和每个 3×3 方格内的数字 1~9 不重复。</li>
+      </ul>
+
+      <h2>八、字符串匹配算法 (String Matching Algorithms)</h2>
+      <p>用于在一个文本中查找特定的子串。常见的字符串匹配算法有：</p>
+      <ul>
+        <li><strong>朴素字符串匹配算法 (Naive String Matching)</strong>：逐字符匹配文本和模式串。</li>
+        <li><strong>KMP 算法 (Knuth-Morris-Pratt)</strong>：通过预处理模式串的部分匹配表来加速匹配过程。</li>
+        <li><strong>Boyer-Moore 算法</strong>：通过字符跳跃来加速字符串匹配。</li>
+        <li><strong>Rabin-Karp 算法</strong>：使用哈希值进行模式匹配。</li>
+      </ul>
+
+      <h2>九、位运算算法 (Bit Manipulation)</h2>
+      <p>位运算涉及对整数的二进制表示进行操作，常用于优化算法。常见的位运算问题有：</p>
+      <ul>
+        <li>判断一个数是否为 2 的幂：通过位运算判断。</li>
+        <li>求一个数的二进制表示中 1 的个数（汉明重量）。</li>
+        <li>求两个数的最大公约数 (GCD)：通过位运算优化辗转相除法。</li>
+      </ul>
+
+      <h2>十、数论算法 (Number Theory Algorithms)</h2>
+      <p>数论算法用于处理与整数相关的各种问题。常见的数论算法有：</p>
+      <ul>
+        <li><strong>欧几里得算法 (Euclidean Algorithm)</strong>：求两个数的最大公约数。</li>
+        <li><strong>扩展欧几里得算法</strong>：用于求解线性同余方程。</li>
+        <li><strong>素数筛法 (Sieve of Eratosthenes)</strong>：用于找出某个范围内所有的素数。</li>
+        <li><strong>快速幂算法 (Exponentiation by Squaring)</strong>：用于快速计算大整数的幂。</li>
+      </ul>
+
+      <div class="reprint-notice">
+        <span class="label">出处</span>
+        本文转载自 CSDN 博客，原作者 <strong>qq_45791939</strong>。<br />
+        原文：《【算法】算法简要介绍》<br />
+        链接：<a href="https://blog.csdn.net/qq_45791939/article/details/145038054" target="_blank" rel="noopener">https://blog.csdn.net/qq_45791939/article/details/145038054</a><br />
+        著作权归原作者所有，转载请保留以上信息与原文链接。
+      </div>
+
+      <a class="back-link" href="../index.html">← 返回首页</a>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      © <span id="year">2026</span> Tiantiankaixin6666 · 由纯静态页面驱动 · Powered by GitHub Pages
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

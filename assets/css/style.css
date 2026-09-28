@@ -235,6 +235,31 @@ blockquote {
 .post-body tbody tr:nth-child(even) { background: color-mix(in srgb, var(--bg-soft) 55%, transparent); }
 .back-link { display: inline-block; margin: 10px 0 0; color: var(--muted); font-size: .9rem; }
 
+/* ===== 转载声明 ===== */
+.reprint-notice {
+  margin: 0 0 28px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-2);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  font-size: .9rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.reprint-notice strong { color: var(--text); }
+.reprint-notice a { color: var(--accent); word-break: break-all; }
+.reprint-notice .label {
+  display: inline-block;
+  font-weight: 700;
+  color: #b45309;
+  background: #fef3c7;
+  border-radius: 6px;
+  padding: 1px 8px;
+  margin-right: 6px;
+}
+[data-theme="dark"] .reprint-notice .label { color: #fcd34d; background: #3a2f12; }
+
 /* ===== 关于页 ===== */
 .about { padding: 56px 0 40px; }
 .about h1 { font-size: 2rem; }
