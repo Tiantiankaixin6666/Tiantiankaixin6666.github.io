@@ -37,8 +37,19 @@
       </ul>
       <p>把这些地址写进 Wireshark 的捕获过滤器，在 WLAN 网卡上抓了 60 秒（期间主动发了文字消息、图片和文件），得到 <strong>279 个数据包</strong>。下面所有结论都来自这份真实抓包，没有"想当然"。</p>
 
+      <figure class="post-figure">
+        <img src="../assets/img/wireshark_packets.png" alt="Wireshark 抓包列表面板（实测前 18 个包）" />
+        <figcaption>图1　真实抓包列表（前 18 个包）。可见清一色到腾讯服务器的 TCP/TLS 流，无一例 UDP——这正是本次实测的第一手证据。</figcaption>
+      </figure>
+
       <h2>二、问题一：TCP 还是 UDP？</h2>
       <p>先看传输层分布。这次抓到的 279 个包<strong>全部是 TCP</strong>，且全部跑在 443 端口上——其中 129 帧被 Wireshark 识别为 TLS/SSL 记录（TLSv1.3 / TLSv1.2 / SSL），其余为 TCP 握手、确认与数据开销，无一例外。把会话（Conversations）按流量排序，对端清一色是上面那三台腾讯服务器：</p>
+
+      <figure class="post-figure">
+        <img src="../assets/img/proto_pie.png" alt="传输层协议分布环形图" />
+        <figcaption>图2　传输层协议分布（实测）。279 个包 100% 为 TCP；其中 129 个被识别为 TLS 记录，其余为 TCP 握手与开销。未出现任何 UDP 或 14000 私有端口。</figcaption>
+      </figure>
+
       <table class="data-table">
         <thead><tr><th>对端（已脱敏）</th><th>端口</th><th>协议</th><th>包数</th><th>字节</th></tr></thead>
         <tbody>
@@ -47,6 +58,12 @@
           <tr><td>36.249.76.x</td><td>443</td><td>TLS</td><td>60</td><td>44 KB</td></tr>
         </tbody>
       </table>
+
+      <figure class="post-figure">
+        <img src="../assets/img/conv_bar.png" alt="三台服务器 TCP 会话对比图" />
+        <figcaption>图3　TCP 会话分布（按对端服务器）。三台腾讯机房各贡献 126 / 93 / 60 个包，字节量 41 / 36 / 44 kB，对端全部为 :443。</figcaption>
+      </figure>
+
       <p><strong>结论</strong>：QQ 的数据面<strong>以 TCP 为主，且全部走 TLS 加密的 443 端口</strong>。本次 60 秒窗口里<strong>没有抓到任何 UDP 包，也没出现经典的 14000 私有端口</strong>——和老教材"QQ 用 UDP"的说法不同，QQ9 新版已经把消息与文件传输默认收拢到 TCP + TLS 上。这本身就是这次实测一个值得记下的发现。</p>
 
       <h2>三、问题二：加密还是明文？</h2>
@@ -56,9 +73,15 @@
         <thead><tr><th>载荷类型</th><th>样本字节</th><th>信息熵</th><th>判定</th></tr></thead>
         <tbody>
           <tr><td>TCP 载荷（非 TLS 记录）</td><td>40,020</td><td><strong>7.996 / 8</strong></td><td>≈随机 → 加密</td></tr>
-          <tr><td>TLS 应用数据</td><td>66,527</td><td><strong>7.996 / 8</strong></td><td>≈随机 → 加密</td></tr>
+          <tr><td>TLS 应用数据</td><td>67,769</td><td><strong>7.970 / 8</strong></td><td>≈随机 → 加密</td></tr>
         </tbody>
       </table>
+
+      <figure class="post-figure">
+        <img src="../assets/img/entropy_hist.png" alt="TLS 应用数据字节分布直方图" />
+        <figcaption>图4　TLS 应用数据字节分布（67,769 字节）。256 个字节值出现次数几乎一样高、紧贴理想均匀线，说明载荷与随机数无异——这正是加密的直接体现（实测熵 7.970/8）。</figcaption>
+      </figure>
+
       <p>两类载荷的熵都几乎顶到 8，和"随机数"没区别。再直观点：在 Wireshark 里 Follow 任意一条 TCP 流，满屏都是不可读的十六进制，<strong>看不到任何聊天内容、账号或明文 XML/JSON</strong>。</p>
       <p><strong>结论</strong>：QQ 通信<strong>全程加密</strong>。443 端口走标准 TLS，本次抓到的所有 TCP 载荷（含疑似私有协议部分）熵同样顶到 7.996/8，对抓包者来说都是密文。</p>
 
@@ -82,14 +105,14 @@
         <thead><tr><th>想搞清楚的问题</th><th>实测答案</th></tr></thead>
         <tbody>
           <tr><td>走 TCP 还是 UDP？</td><td>本次实测以 TCP 为主（全部 TLS 443，未观察到 UDP 与 14000 私有端口）；QQ9 新版已收拢到 TCP + TLS</td></tr>
-          <tr><td>加密还是明文？</td><td>全程加密（TCP 载荷与 TLS 应用数据熵均 7.996/8）</td></tr>
+          <tr><td>加密还是明文？</td><td>全程加密（TCP 载荷熵 7.996/8、TLS 应用数据熵 7.970/8）</td></tr>
           <tr><td>能恢复明文文件吗？</td><td>不能；文件在加密隧道内，按文件头特征搜索 0 命中，走服务器中转</td></tr>
         </tbody>
       </table>
       <blockquote>一次真实的抓包，比十句"听说"都管用。网络协议这种东西，自己抓一份、对着字节算一遍熵，很多模糊的印象就变成确定的结论了。</blockquote>
 
       <h2>关于隐私</h2>
-      <p>本文所有截图与数据均做了脱敏：本机地址以 <code>10.34.x.x</code> 表示，服务器地址只保留前两段（如 <code>183.47.x.x</code>），未出现任何 QQ 号、昵称或 MAC 地址。抓到的原始包仅用于本地分析，未作传播。</p>
+      <p>本文所有截图与数据均做了脱敏：本机地址以 <code>10.34.x.x</code> 表示，服务器地址只保留前两段（如 <code>183.47.x.x</code>），抓包面板与图表中的地址同样按此规则处理，未出现任何 QQ 号、昵称或 MAC 地址。抓到的原始包仅用于本地分析，未作传播。</p>
 
       <a class="back-link" href="../index.html">← 返回首页</a>
     </article>

@@ -235,6 +235,17 @@ blockquote {
 .post-body tbody tr:nth-child(even) { background: color-mix(in srgb, var(--bg-soft) 55%, transparent); }
 .back-link { display: inline-block; margin: 10px 0 0; color: var(--muted); font-size: .9rem; }
 
+/* ===== 文章配图 ===== */
+.post-figure { margin: 26px 0; text-align: center; }
+.post-figure img {
+  max-width: 100%; height: auto; display: inline-block;
+  border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow); background: var(--card);
+}
+.post-figure figcaption {
+  margin-top: 10px; color: var(--muted); font-size: .88rem; line-height: 1.5;
+}
+
 /* ===== 转载声明 ===== */
 .reprint-notice {
   margin: 0 0 28px;
