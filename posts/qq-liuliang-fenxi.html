@@ -22,39 +22,32 @@
   <main class="container">
     <article class="post-header">
       <h1>用 Wireshark 看 QQ 流量：它走 TCP 还是 UDP，内容加密了吗</h1>
-      <div class="meta" style="color:var(--muted);font-size:.88rem;margin-bottom:8px;">2026-10-18 · 网络 / 抓包 / 原创</div>
+      <div class="meta" style="color:var(--muted);font-size:.88rem;margin-bottom:8px;">2026-10-19 · 网络 / 抓包 / 原创</div>
     </article>
 
     <article class="post-body">
       <p>平时用 QQ 聊天、传文件，脑子里一直有个好奇：这些字节在网络里到底是怎么跑的？是走 TCP 还是 UDP？内容是不是明文？万一抓到包，能不能把别人传的文件还原出来？趁着手边有 Wireshark，我决定自己抓一份真实流量来验证，而不是凭印象下结论。</p>
 
       <h2>一、抓包环境与方法</h2>
-      <p>环境很简单：一台连着 WLAN 的 Windows 电脑，QQ 保持登录并处于活跃状态。先在命令行用 <code>netstat -ano</code> 配合 QQ 进程的 PID，找出它正在连的服务器地址和端口——主要两类：</p>
+      <p>环境很简单：一台连着 WLAN 的 Windows 电脑，QQ 保持登录并处于活跃状态。先在任务管理器里确认 QQ 的主进程 PID，再用命令行 <code>netstat -ano</code> 配合这个 PID，找出它正在连的服务器地址和端口。本次实测，QQ 主进程（PID 20132）建立了到以下腾讯机房地址的连接，<strong>全部是 TCP 443</strong>：</p>
       <ul>
-        <li><strong>长连接</strong>：到 <code>157.148.x.x:14000</code>（QQ 经典的长连接服务端口）；</li>
-        <li><strong>业务连接</strong>：到一批 <code>27.44.x.x:443</code>、<code>221.11.x.x:443</code>、<code>220.197.x.x:443</code> 等的 443 端口。</li>
+        <li><code>183.47.101.x:443</code></li>
+        <li><code>112.90.80.x:443</code></li>
+        <li><code>36.249.76.x:443</code></li>
       </ul>
-      <p>把这些地址写进 Wireshark 的捕获过滤器，在 WLAN 网卡上抓了 45 秒，得到 <strong>977 个数据包</strong>。下面所有结论都来自这份真实抓包，没有"想当然"。</p>
+      <p>把这些地址写进 Wireshark 的捕获过滤器，在 WLAN 网卡上抓了 60 秒（期间主动发了文字消息、图片和文件），得到 <strong>279 个数据包</strong>。下面所有结论都来自这份真实抓包，没有"想当然"。</p>
 
       <h2>二、问题一：TCP 还是 UDP？</h2>
-      <p>先看传输层分布。这次抓到的 977 个包<strong>全部是 TCP</strong>，具体拆分大致是：</p>
-      <ul>
-        <li>约 <strong>305 帧是 TLS</strong>（TLSv1.3 / TLSv1.2 / SSL / TLSv1 混合）——也就是跑在 443 端口上的加密业务流量；</li>
-        <li>约 <strong>225 帧是裸 TCP 载荷</strong>（Wireshark 标为 <code>data</code>）——这是 QQ 自己的私有协议，多数走那条 :14000 长连接；</li>
-        <li>其余是 TCP 握手、确认等协议开销。</li>
-      </ul>
-      <p>把会话（Conversations）按流量排个序，对端清一色是腾讯机房地址，端口集中在 443 和 14000：</p>
+      <p>先看传输层分布。这次抓到的 279 个包<strong>全部是 TCP</strong>，且全部跑在 443 端口上——其中 129 帧被 Wireshark 识别为 TLS/SSL 记录（TLSv1.3 / TLSv1.2 / SSL），其余为 TCP 握手、确认与数据开销，无一例外。把会话（Conversations）按流量排序，对端清一色是上面那三台腾讯服务器：</p>
       <table class="data-table">
         <thead><tr><th>对端（已脱敏）</th><th>端口</th><th>协议</th><th>包数</th><th>字节</th></tr></thead>
         <tbody>
-          <tr><td>27.44.123.x</td><td>443</td><td>TLS</td><td>~91</td><td>~6.8 KB</td></tr>
-          <tr><td>27.44.121.x</td><td>443</td><td>TLS</td><td>~94</td><td>~11 KB</td></tr>
-          <tr><td>221.11.190.x</td><td>443</td><td>TLS</td><td>~53</td><td>~8 KB</td></tr>
-          <tr><td>220.197.31.x</td><td>443</td><td>TLS</td><td>~40</td><td>~22 KB</td></tr>
-          <tr><td>157.148.54.x</td><td>14000</td><td>私有协议</td><td>长连接</td><td>—</td></tr>
+          <tr><td>183.47.101.x</td><td>443</td><td>TLS</td><td>126</td><td>41 KB</td></tr>
+          <tr><td>112.90.80.x</td><td>443</td><td>TLS</td><td>93</td><td>36 KB</td></tr>
+          <tr><td>36.249.76.x</td><td>443</td><td>TLS</td><td>60</td><td>44 KB</td></tr>
         </tbody>
       </table>
-      <p><strong>结论</strong>：QQ 的数据面<strong>以 TCP 为主</strong>——消息和文件传输走 TCP 上的 TLS（443）或私有协议（14000）。那 UDP 呢？在这 45 秒窗口里没抓到 UDP 包，但用 <code>netstat</code> 在同一台机器上确实看到过 QQ 的 UDP 连接（例如到 <code>27.44.120.x:443</code> 的 UDP）。所以更准确的说法是：<strong>TCP 和 UDP 都用，但承载消息/文件的是 TCP，UDP 更多出现在心跳、部分推送类场景</strong>。</p>
+      <p><strong>结论</strong>：QQ 的数据面<strong>以 TCP 为主，且全部走 TLS 加密的 443 端口</strong>。本次 60 秒窗口里<strong>没有抓到任何 UDP 包，也没出现经典的 14000 私有端口</strong>——和老教材"QQ 用 UDP"的说法不同，QQ9 新版已经把消息与文件传输默认收拢到 TCP + TLS 上。这本身就是这次实测一个值得记下的发现。</p>
 
       <h2>三、问题二：加密还是明文？</h2>
       <p>这是最关键的。判断方法很简单：把一段载荷单独拎出来，看它像不像可读文本，再算一下<strong>信息熵</strong>——明文文本熵很低（英文字母、空格分布集中），而加密/压缩后的字节熵会非常接近理论最大值 8 bit/byte（完全随机）。</p>
@@ -62,12 +55,12 @@
       <table class="data-table">
         <thead><tr><th>载荷类型</th><th>样本字节</th><th>信息熵</th><th>判定</th></tr></thead>
         <tbody>
-          <tr><td>裸 TCP 私有协议</td><td>29,239</td><td><strong>7.955 / 8</strong></td><td>≈随机 → 加密</td></tr>
-          <tr><td>TLS 应用数据</td><td>49,937</td><td><strong>7.997 / 8</strong></td><td>≈随机 → 加密</td></tr>
+          <tr><td>TCP 载荷（非 TLS 记录）</td><td>40,020</td><td><strong>7.996 / 8</strong></td><td>≈随机 → 加密</td></tr>
+          <tr><td>TLS 应用数据</td><td>66,527</td><td><strong>7.996 / 8</strong></td><td>≈随机 → 加密</td></tr>
         </tbody>
       </table>
       <p>两类载荷的熵都几乎顶到 8，和"随机数"没区别。再直观点：在 Wireshark 里 Follow 任意一条 TCP 流，满屏都是不可读的十六进制，<strong>看不到任何聊天内容、账号或明文 XML/JSON</strong>。</p>
-      <p><strong>结论</strong>：QQ 通信<strong>全程加密</strong>。443 端口走标准 TLS，14000 长连接走私有加密协议，两者对抓包者来说都是密文。</p>
+      <p><strong>结论</strong>：QQ 通信<strong>全程加密</strong>。443 端口走标准 TLS，本次抓到的所有 TCP 载荷（含疑似私有协议部分）熵同样顶到 7.996/8，对抓包者来说都是密文。</p>
 
       <h2>四、问题三：能从抓包里恢复明文传输的文件吗？</h2>
       <p>既然要传文件，自然会想：能不能像"按文件头特征拼回文件"那样，从流量里把别人发的图片、压缩包还原出来？做法是：在原始载荷里按常见文件头做特征搜索——</p>
@@ -88,15 +81,15 @@
       <table class="data-table">
         <thead><tr><th>想搞清楚的问题</th><th>实测答案</th></tr></thead>
         <tbody>
-          <tr><td>走 TCP 还是 UDP？</td><td>都用；数据面以 TCP 为主（TLS 443 + 私有协议 14000），UDP 多见于心跳/推送</td></tr>
-          <tr><td>加密还是明文？</td><td>全程加密（裸 TCP 私有协议熵 7.955/8，TLS 应用数据熵 7.997/8）</td></tr>
+          <tr><td>走 TCP 还是 UDP？</td><td>本次实测以 TCP 为主（全部 TLS 443，未观察到 UDP 与 14000 私有端口）；QQ9 新版已收拢到 TCP + TLS</td></tr>
+          <tr><td>加密还是明文？</td><td>全程加密（TCP 载荷与 TLS 应用数据熵均 7.996/8）</td></tr>
           <tr><td>能恢复明文文件吗？</td><td>不能；文件在加密隧道内，按文件头特征搜索 0 命中，走服务器中转</td></tr>
         </tbody>
       </table>
       <blockquote>一次真实的抓包，比十句"听说"都管用。网络协议这种东西，自己抓一份、对着字节算一遍熵，很多模糊的印象就变成确定的结论了。</blockquote>
 
       <h2>关于隐私</h2>
-      <p>本文所有截图与数据均做了脱敏：本机地址以 <code>10.34.x.x</code> 表示，服务器地址只保留前两段（如 <code>27.44.x.x</code>），未出现任何 QQ 号、昵称或 MAC 地址。抓到的原始包仅用于本地分析，未作传播。</p>
+      <p>本文所有截图与数据均做了脱敏：本机地址以 <code>10.34.x.x</code> 表示，服务器地址只保留前两段（如 <code>183.47.x.x</code>），未出现任何 QQ 号、昵称或 MAC 地址。抓到的原始包仅用于本地分析，未作传播。</p>
 
       <a class="back-link" href="../index.html">← 返回首页</a>
     </article>
