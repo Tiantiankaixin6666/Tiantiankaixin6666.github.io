@@ -31,23 +31,7 @@
     </section>
 
     <h2 class="section-title">最新文章</h2>
-    <div class="post-list">
-      <a class="post-card" href="posts/qq-liuliang-fenxi.html">
-        <h3>用 Wireshark 看 QQ 流量：它走 TCP 还是 UDP，内容加密了吗</h3>
-        <div class="meta"><span>2026-10-18</span><span class="tag">网络</span><span class="tag">抓包</span><span class="tag">原创</span></div>
-        <p>自己抓一份 QQ 真实流量，用会话统计、信息熵和文件头特征搜索，回答三个问题：TCP 还是 UDP、加密还是明文、能否从抓包恢复明文文件。</p>
-      </a>
-      <a class="post-card" href="posts/suanfa-rumen.html">
-        <h3>算法入门：它到底是什么，又该怎么衡量</h3>
-        <div class="meta"><span>2026-09-28</span><span class="tag">算法</span><span class="tag">原创</span></div>
-        <p>原创。从生活化例子讲清算法是什么，用大 O 表示法衡量好坏，并用「两数之和」的暴力 vs 哈希、以及二分查找，体会不同解法的效率差距。</p>
-      </a>
-      <a class="post-card" href="posts/dengbao2-0.html">
-        <h3>我对等保2.0的理解</h3>
-        <div class="meta"><span>2026-09-28</span><span class="tag">网络安全</span></div>
-        <p>等保2.0 是什么、法律地位如何、核心思想"一个中心三重防护"、保护对象与技术管理要点，以及它和等保1.0 的主要区别。</p>
-      </a>
-    </div>
+    <div class="post-list" id="post-list"></div>
   </main>
 
   <footer class="site-footer">
@@ -56,6 +40,7 @@
     </div>
   </footer>
 
+  <script src="assets/js/posts-data.js"></script>
   <script src="assets/js/main.js"></script>
 </body>
 </html>
