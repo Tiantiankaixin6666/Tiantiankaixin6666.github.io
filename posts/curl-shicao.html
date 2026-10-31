@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用 curl 亲手摸一摸 HTTP：5 条命令看懂请求与响应 · Tiantiankaixin6666 的技术博客</title>
+  <meta name="description" content="一次 curl 命令行实操记录：从看响应头、跟随重定向、发 POST 请求、调 REST API 到测耗时，用 5 条真实命令和真实输出理解 HTTP 请求与响应的全过程。" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="../index.html">Tiantiankaixin6666</a>
+      <div class="nav-links">
+        <a href="../index.html">首页</a>
+        <a href="../about.html">关于</a>
+        <button class="theme-btn" id="theme-toggle" aria-label="切换主题">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <article class="post-header">
+      <h1>用 curl 亲手摸一摸 HTTP：5 条命令看懂请求与响应</h1>
+      <div class="meta" style="color:var(--muted);font-size:.88rem;margin-bottom:8px;">2026-10-31 · 网络 / HTTP / 工具 / 原创</div>
+    </article>
+
+    <article class="post-body">
+      <p>学网络协议时，HTTP 的"请求—响应"模型总感觉隔着一层。这次我决定用命令行工具 <strong>curl</strong> 亲手发几条真实请求，对着真实输出逐行读懂它——不做PPT式的罗列，每条命令都配了真实截图和解读。所有命令都在 Windows 自带的 cmd 里跑通（Win10/11 已内置 curl，无需安装）。</p>
+
+      <h2>一、curl 是什么</h2>
+      <p>curl 是一个命令行的 URL 数据传输工具，支持 HTTP/HTTPS 等一堆协议。说人话就是：<strong>你在黑窗口里敲一行命令，它替你完成 DNS 解析 → TCP 握手 → TLS 握手 → 发送 HTTP 请求 → 接收响应的整套流程</strong>，并把结果打印到屏幕上。浏览器做的事情它都在做，只是把"界面"去掉了——所以看 HTTP 最裸的样子，curl 比浏览器直观得多。</p>
+      <p>本次实测环境：Windows 11 自带 curl（从后面 POST 回显的 <code>User-Agent</code> 里能看到它的版本：<code>curl/8.13.0</code>），直接 cmd 开跑。</p>
+
+      <h2>二、实操一：看响应头（-I）</h2>
+      <p>第一条命令最常用：<code>-s</code> 表示静默模式（不显示进度条），<code>-I</code> 表示只取响应头（发的是 HEAD 请求，不要正文）：</p>
+      <pre><code>curl -s -I https://www.baidu.com</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/curl_baidu_headers.png" alt="curl -I 查看 baidu 响应头的终端截图" />
+        <figcaption>图1　curl -I 查看 www.baidu.com 的响应头（实测）。状态行 200 OK 表示请求成功。</figcaption>
+      </figure>
+
+      <p>逐行读这份输出，每个头都有含义：</p>
+      <ul>
+        <li><code>HTTP/1.1 200 OK</code> —— 状态行。200 是"成功"，这是最想看到的一行；</li>
+        <li><code>Content-Type: text/html</code> —— 响应体是 HTML 页面；</li>
+        <li><code>Content-Length: 0</code> —— 注意这里是 0！因为 <code>-I</code> 发的是 HEAD 请求，服务器只返回头、不返回正文，所以长度为 0。这是个容易困惑的点；</li>
+        <li><code>Cache-Control: private, no-cache, ...</code> —— 告诉浏览器（和中间代理）这份内容怎么缓存；</li>
+        <li><code>Server: bfe</code> —— bfe 是 Baidu Front End，百度自研的流量接入层，等于从响应头里"看穿"了对方用的服务器软件。</li>
+      </ul>
+
+      <h2>三、实操二：跟随重定向（-L）</h2>
+      <p>有些网址会把你"踢"到另一个地址（301/302 跳转）。加 <code>-L</code> 让 curl 自动跟着跳，再配合 <code>-I</code> 就能看到完整的两跳：</p>
+      <pre><code>curl -sIL https://httpbin.org/redirect/1</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/curl_redirect.png" alt="curl -sIL 跟随重定向的终端截图" />
+        <figcaption>图2　跟随重定向实测。上半段 302 Found + location: /get，下半段自动跳转后拿到 200 OK。</figcaption>
+      </figure>
+
+      <p>这张图把重定向机制拍得明明白白：</p>
+      <ul>
+        <li>第一段：<code>HTTP/1.1 302 Found</code>，关键在 <code>location: /get</code> 这个头——服务器说"内容不在这儿，去 /get 拿"；</li>
+        <li>第二段：因为加了 <code>-L</code>，curl 没有停下来，而是自动向 <code>/get</code> 再发一次请求，这次拿到 <code>HTTP/1.1 200 OK</code>，且 <code>content-type: application/json</code>。</li>
+      </ul>
+      <p>如果没有 <code>-L</code>，输出会停在 302 那一段——这也是调试"为什么浏览器能打开、脚本却拿不到数据"时最常见的原因。</p>
+
+      <h2>四、实操三：发 POST 请求（-X 与 -d）</h2>
+      <p>前面都是 GET。这次用 <code>-X POST</code> 指定请求方法，用 <code>-d</code> 携带表单数据（注意数据要用双引号包住，否则 <code>&amp;</code> 会被终端当成命令分隔符）：</p>
+      <pre><code>curl -s -X POST https://httpbin.org/post -d "name=lishaojie&amp;course=network"</code></pre>
+      <p>httpbin.org 是一个"你发什么就回显什么"的调试服务，最适合看清请求到底长什么样：</p>
+
+      <figure class="post-figure">
+        <img src="../assets/img/curl_post.png" alt="curl POST 请求 httpbin 回显的终端截图" />
+        <figcaption>图3　POST 请求实测。httpbin 原样回显了请求信息，form 字段里正是我们提交的两个键值对。</figcaption>
+      </figure>
+
+      <p>重点读这几处：</p>
+      <ul>
+        <li><code>"form": { "course": "network", "name": "lishaojie" }</code> —— 我们用 <code>-d</code> 提交的数据被服务器完整收到并解析，说明表单传输成功；</li>
+        <li><code>"Content-Type": "application/x-www-form-urlencoded"</code> —— <code>-d</code> 会自动把请求头设置成标准表单编码，不用手动指定；</li>
+        <li><code>"User-Agent": "curl/8.13.0"</code> —— 顺便确认了本机 curl 的版本；</li>
+        <li><code>"origin"</code> —— 我们的公网出口地址（校园网共享出口），httpbin 用它记录"请求从哪个 IP 来"。</li>
+      </ul>
+
+      <h2>五、实操四：调 REST API 拿 JSON</h2>
+      <p>如今大量服务以 API 形式提供数据，curl 是调试 API 的标配。GitHub 的公开 API 不需要登录就能查用户信息：</p>
+      <pre><code>curl -s https://api.github.com/users/Tiantiankaixin6666</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/curl_github_api.png" alt="curl 调用 GitHub API 的终端截图" />
+        <figcaption>图4　GitHub API 实测。返回一段结构化 JSON，包含账号 id、公开仓库数、创建时间等字段。</figcaption>
+      </figure>
+
+      <p>这就是一次标准的"API 调用"：服务器返回的不是网页，而是结构化的 JSON。挑几个有信息量的字段：</p>
+      <ul>
+        <li><code>"login": "Tiantiankaixin6666"</code> —— 用户名；</li>
+        <li><code>"public_repos": 2</code> —— 公开仓库数量；</li>
+        <li><code>"created_at": "2026-08-31..."</code> —— 账号注册时间；</li>
+        <li><code>"followers" / "following"</code> —— 关注数据。</li>
+      </ul>
+      <p>写爬虫或做接口测试时，第一步往往就是这样用 curl 把原始 JSON 拉下来看结构，再决定怎么解析。</p>
+
+      <h2>六、实操五：测耗时（-w）</h2>
+      <p>最后一条做性能观测：<code>-o nul</code> 把响应体丢进 Windows 的"黑洞"设备（Linux 下写作 <code>/dev/null</code>），<code>-w</code> 按自定义格式输出统计信息，<code>%{http_code}</code> 是状态码、<code>%{time_total}</code> 是总耗时：</p>
+      <pre><code>curl -s -o nul -w "code:%{http_code} t:%{time_total}s\n" https://www.baidu.com</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/curl_timing.png" alt="curl -w 计时输出截图" />
+        <figcaption>图5　耗时实测。code:200 表示成功，但这次总耗时高达 11.17 秒——远超正常水平。</figcaption>
+      </figure>
+
+      <p>这里有个值得琢磨的现象：<code>t:11.17s</code> 太慢了，正常对百度这种成熟站点应在几十到几百毫秒。总耗时是各环节之和：DNS 解析 + TCP 握手 + TLS 握手 + 服务器处理 + 内容传输，<strong>任何一环抖动都会把总数拉高</strong>——这次大概率是请求瞬间的网络波动。想定位到底慢在哪，可以再细分计时：</p>
+      <pre><code>curl -s -o nul -w "DNS:%{time_namelookup}s TCP:%{time_connect}s TLS:%{time_appconnect}s 总计:%{time_total}s\n" https://www.baidu.com</code></pre>
+      <p>多跑几次对比，就能看出波动发生在哪个阶段。这正是 <code>-w</code> 在排查"网站怎么这么慢"时的用法。</p>
+
+      <h2>七、旗标速查与小结</h2>
+      <table class="data-table">
+        <thead><tr><th>旗标</th><th>作用</th><th>本次用在哪</th></tr></thead>
+        <tbody>
+          <tr><td><code>-s</code></td><td>静默模式，不显示进度条和错误信息</td><td>所有命令</td></tr>
+          <tr><td><code>-I</code></td><td>只取响应头（HEAD 请求）</td><td>实操一、二</td></tr>
+          <tr><td><code>-L</code></td><td>跟随 3xx 重定向</td><td>实操二</td></tr>
+          <tr><td><code>-X</code></td><td>指定请求方法（GET/POST/PUT/DELETE）</td><td>实操三</td></tr>
+          <tr><td><code>-d</code></td><td>携带请求体数据（自动设为表单编码）</td><td>实操三</td></tr>
+          <tr><td><code>-o</code></td><td>把响应体写入文件（<code>nul</code>/<code>/dev/null</code> 即丢弃）</td><td>实操五</td></tr>
+          <tr><td><code>-w</code></td><td>自定义输出格式，可引用耗时/状态码等变量</td><td>实操五</td></tr>
+        </tbody>
+      </table>
+      <p>五条命令跑下来，HTTP 的"请求—响应"模型就不再是抽象图了：<strong>状态行决定成败（200/302），响应头传递元信息（location/Content-Type/Server），请求方法与请求体决定"要什么、给什么"，而计时把整条链路的性能摊开给你看</strong>。curl 体积小、到处都有，是调试接口、验证服务、排查网络问题最趁手的瑞士军刀。</p>
+      <blockquote>与其背十条概念，不如亲手敲五条命令。每一行输出都是服务器亲口告诉你的答案。</blockquote>
+
+      <h2>关于隐私</h2>
+      <p>本文截图均为本机真实操作记录。图3 回显中的 <code>origin</code> 为校园网共享出口地址（非本机独有 IP），仅作演示；未涉及任何账号口令、Cookie 等敏感信息。</p>
+
+      <a class="back-link" href="../index.html">← 返回首页</a>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      © <span id="year">2026</span> Tiantiankaixin6666 · 由纯静态页面驱动 · Powered by GitHub Pages
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

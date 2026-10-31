@@ -2,6 +2,13 @@
 // file 相对于站点根目录；tags 为字符串数组；summary 为卡片摘要
 window.POSTS = [
   {
+    "file": "posts/curl-shicao.html",
+    "title": "用 curl 亲手摸一摸 HTTP：5 条命令看懂请求与响应",
+    "date": "2026-10-31",
+    "tags": ["网络", "HTTP", "工具", "原创"],
+    "summary": "在 Windows 自带的 cmd 里用 5 条真实 curl 命令摸 HTTP：看响应头、跟随重定向、发 POST、调 GitHub API、测耗时，每条都配真实截图与逐行解读。"
+  },
+  {
     "file": "posts/qq-liuliang-fenxi.html",
     "title": "用 Wireshark 看 QQ 流量：它走 TCP 还是 UDP，内容加密了吗",
     "date": "2026-10-19",
