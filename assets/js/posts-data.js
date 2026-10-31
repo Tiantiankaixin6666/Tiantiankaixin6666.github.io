@@ -2,6 +2,13 @@
 // file 相对于站点根目录；tags 为字符串数组；summary 为卡片摘要
 window.POSTS = [
   {
+    "file": "posts/smiley-poc.html",
+    "title": "笑脸漏洞 PoC 实战：一个 :) 拿下 root shell（CVE-2011-2523）",
+    "date": "2026-10-31",
+    "tags": ["网络安全", "渗透实验", "Python", "原创"],
+    "summary": "用 Python 写 vsftpd 2.3.4 笑脸后门检测 PoC，在 Kali + Metasploitable2 授权实验环境里四步拿到 root：指纹扫描、nc 触发、连 6200 验证，含源码截图与四个实战踩坑。"
+  },
+  {
     "file": "posts/curl-shicao.html",
     "title": "用 curl 亲手摸一摸 HTTP：5 条命令看懂请求与响应",
     "date": "2026-10-31",
