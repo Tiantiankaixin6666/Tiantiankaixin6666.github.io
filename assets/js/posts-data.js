@@ -2,6 +2,13 @@
 // file 相对于站点根目录；tags 为字符串数组；summary 为卡片摘要
 window.POSTS = [
   {
+    "file": "posts/pikachu-target.html",
+    "title": "皮卡丘靶场搭建与首关通关：从 0 搭环境到读懂 XSS 源码",
+    "date": "2026-11-01",
+    "tags": ["网络安全", "靶场", "XSS", "源码分析", "原创"],
+    "summary": "在 Kali 上用 LAMP 搭建 Pikachu 漏洞练习平台，亲手通关反射型 XSS，并深入源码分析漏洞成因（用户输入未转义直接拼 HTML）与修复方案（htmlspecialchars 输出编码）。含搭建白屏排错。"
+  },
+  {
     "file": "posts/smiley-poc.html",
     "title": "笑脸漏洞 PoC 实战：一个 :) 拿下 root shell（CVE-2011-2523）",
     "date": "2026-10-31",
