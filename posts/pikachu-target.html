@@ -28,11 +28,6 @@
     <article class="post-body">
       <p>学 Web 安全，光看概念永远隔着一层——真正理解一个漏洞，最好的办法是<strong>在自己机器上把它打一遍</strong>。Pikachu 是一个开源的、故意写满漏洞的 PHP 网站练习平台，覆盖 XSS、SQL 注入、CSRF、文件上传等十几类漏洞，每一关都能在本机安全复现。本文记录我从零搭建 Pikachu 靶场、通关第一关（反射型 XSS），并<strong>深入源码</strong>搞清"它为什么有漏洞、该怎么修"的完整过程。</p>
 
-      <figure class="post-figure">
-        <img src="../assets/img/pika_assignment.jpg" alt="课程作业要求截图" />
-        <figcaption>图1　本次作业要求：搭建 Pikachu 靶场、个人尝试通关，并把过程记入 blog；高阶要求是对源码做漏洞成因与修复分析。</figcaption>
-      </figure>
-
       <h2>一、环境搭建（LAMP + Pikachu）</h2>
       <p>Pikachu 是 PHP 应用，需要网页服务器 + 数据库 + PHP 解释器三件套（统称 LAMP）。我在 Kali 上用一条命令装齐：</p>
       <pre><code>sudo apt install -y apache2 mariadb-server php php-mysqli git
@@ -50,7 +45,7 @@ sudo git clone https://github.com/zhuifengshaonianhanlu/pikachu.git</code></pre>
       </ul>
       <figure class="post-figure">
         <img src="../assets/img/pika_config.png" alt="Pikachu 配置文件源码截图" />
-        <figcaption>图2　配置文件 <code>inc/config.inc.php</code> 源码。注意 <code>DBPW</code> 默认是空字符串——这正是白屏白忙活的根因。</figcaption>
+        <figcaption>图1　配置文件 <code>inc/config.inc.php</code> 源码。注意 <code>DBPW</code> 默认是空字符串——这正是白屏白忙活的根因。</figcaption>
       </figure>
 
       <p>两行命令修掉它（把 root 切成密码认证，并填上密码）：</p>
@@ -59,14 +54,14 @@ sudo sed -i "s/define('DBPW', '');/define('DBPW', 'pikachu');/" /var/www/html/pi
       <p>再回到 <code>install.php</code> 点「安装/初始化」，数据库顺利建好。打开首页，左边一整面漏洞菜单——靶场正式就绪：</p>
       <figure class="post-figure">
         <img src="../assets/img/pika_home.png" alt="Pikachu 主页截图" />
-        <figcaption>图3　Pikachu 主页。左侧菜单是全部漏洞练习模块：暴力破解、XSS、CSRF、SQL 注入、文件上传、越权……整面墙都是练手对象。</figcaption>
+        <figcaption>图2　Pikachu 主页。左侧菜单是全部漏洞练习模块：暴力破解、XSS、CSRF、SQL 注入、文件上传、越权……整面墙都是练手对象。</figcaption>
       </figure>
 
       <h2>二、首关通关：反射型 XSS（post）</h2>
       <p>从最常见的 XSS 开刀。左侧菜单 <strong>XSS → 反射型xss(post)</strong>，这一关需要先登录（用平台账号 <code>pikachu / 000000</code>），登录后才出现留言输入框：</p>
       <figure class="post-figure">
         <img src="../assets/img/pika_xss_login.png" alt="XSS 关卡登录页与输入框" />
-        <figcaption>图4　登录后出现的留言输入框。原理是：你提交什么，页面就把什么原样回显给你。</figcaption>
+        <figcaption>图3　登录后出现的留言输入框。原理是：你提交什么，页面就把什么原样回显给你。</figcaption>
       </figure>
 
       <p>在输入框里提交一段"带恶意"的内容：</p>
@@ -74,7 +69,7 @@ sudo sed -i "s/define('DBPW', '');/define('DBPW', 'pikachu');/" /var/www/html/pi
       <p>点 submit——浏览器真的弹出了写着 <code>xss</code> 的对话框！这说明我输入的 <code>&lt;script&gt;</code> 没有被视为"数据"，而是被浏览器当成"要执行的代码"跑了：</p>
       <figure class="post-figure">
         <img src="../assets/img/pika_xss_popup.png" alt="XSS 弹窗截图" />
-        <figcaption>图5　弹窗即通关铁证：注入的 JavaScript 被执行。实际攻击中，攻击者不会只弹个窗，而是借此偷 Cookie、伪造页面、发起更进一步的攻击。</figcaption>
+        <figcaption>图4　弹窗即通关铁证：注入的 JavaScript 被执行。实际攻击中，攻击者不会只弹个窗，而是借此偷 Cookie、伪造页面、发起更进一步的攻击。</figcaption>
       </figure>
 
       <h2>三、进阶：读源码，漏洞到底从哪来</h2>
