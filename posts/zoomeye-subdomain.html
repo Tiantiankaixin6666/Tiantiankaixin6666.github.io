@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZoomEye 空间测绘与子域名收集实操 · Tiantiankaixin6666 的技术博客</title>
+  <meta name="description" content="一篇动手记录：盘点类 ZoomEye 的网络空间测绘引擎，用 ZoomEye 真实跑通多条件检索并截图，再用证书透明度和搜索引擎两种被动手法收集子域名，最后聊聊被动收集与主动探测的边界。" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="../index.html">Tiantiankaixin6666</a>
+      <div class="nav-links">
+        <a href="../index.html">首页</a>
+        <a href="../about.html">关于</a>
+        <button class="theme-btn" id="theme-toggle" aria-label="切换主题">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <article class="post-header">
+      <h1>ZoomEye 空间测绘与子域名收集实操</h1>
+      <div class="meta" style="color:var(--muted);font-size:.88rem;margin-bottom:8px;">2026-11-02 · 网络安全 / 网络空间测绘 / 子域名收集 / 原创</div>
+    </article>
+
+    <article class="post-body">
+      <p>网络空间测绘（Cyber Spatial Mapping）这两年越听越多了——它干的事很像"给全互联网做一次人口普查"：自动扫描 IPv4 全量的端口和服务，把每个 IP 开放了什么、跑的是什么版本、Banner 写了什么，全部存进数据库，再给你一个搜索引擎式的界面去查。这篇记录我自己动手用 <strong>ZoomEye</strong> 跑通检索、并把子域名收集实践了一遍的完整过程，顺便把市面上同类引擎梳理清楚。</p>
+      <blockquote><strong>声明</strong>：本文全部查询均为<strong>被动查看公开索引</strong>，未向任何第三方目标发送探测流量。网络空间测绘的公开数据是安全研究的利器，但请只在授权范围内使用，对未授权目标发起主动扫描属于违规行为。</blockquote>
+
+      <h2>一、类 ZoomEye 引擎盘点</h2>
+      <p>先横向看一眼这个赛道。下面几个产品思路一致——扫全网、建指纹库、提供检索——但数据来源、覆盖重心、开放程度各有侧重：</p>
+      <table class="data-table">
+        <thead><tr><th>引擎</th><th>背景</th><th>检索语法特点</th><th>免费额度</th></tr></thead>
+        <tbody>
+          <tr><td><strong>ZoomEye</strong></td><td>国内知道创宇</td><td><code>app:</code> / <code>service:</code> / <code>port:</code> / <code>country:</code> / <code>banner:</code> / <code>site:</code>，支持 Web 与主机两种视图</td><td>有限次/天</td></tr>
+          <tr><td><strong>Shodan</strong></td><td>美国，最早成名</td><td><code>port:</code> / <code>country:</code> / <code>product:</code> / <code>os:</code>，物联网设备指纹极强</td><td>有限条/月</td></tr>
+          <tr><td><strong>FOFA</strong></td><td>国内华顺信安</td><td><code>app="X"</code> / <code>host="X"</code> / <code>title="X"</code>，国内资产覆盖最全</td><td>有限条/月</td></tr>
+          <tr><td><strong>Censys</strong></td><td>美国，学术出身</td><td>基于证书和协议层扫描，<code>services.service_name=</code> 等结构化语法</td><td>有限次/月</td></tr>
+          <tr><td><strong>奇安信 Hunter</strong></td><td>国内奇安信</td><td><code>domain=</code> / <code>ip=</code> / <code>service=</code>，偏威胁情报视角</td><td>有限积分</td></tr>
+          <tr><td><strong>360 Quake</strong></td><td>国内 360</td><td><code>app:"X"</code> / <code>port:</code>，国内节点扫描密度高</td><td>有限次/月</td></tr>
+          <tr><td><strong>Netlas</strong></td><td>海外开源向</td><td><code>service.name=</code> / <code>response.banner=</code>，免费档较友好</td><td>较宽松</td></tr>
+        </tbody>
+      </table>
+      <p>它们的价值不在于"扫"，而在于<strong>把别人扫好的结果存成了可检索的库</strong>。安全研究员做资产梳理、暴露面盘点、漏洞影响面评估时，第一反应往往是先去这些库里查一查，而不是自己去扫。</p>
+
+      <h2>二、ZoomEye 实操</h2>
+      <p>ZoomEye 有两种搜索视图：<strong>Web 资产</strong>（网站/域名）和<strong>主机资产</strong>（IP/端口/服务）。下面都是我在主机视图里做的。</p>
+
+      <h3>1. 登录首页</h3>
+      <figure class="post-figure">
+        <img src="../assets/img/ze_home.jpg" alt="ZoomEye 登录后的首页" />
+        <figcaption>图1　ZoomEye 登录后的首页，右上角已登录；中间搜索框即查询入口，右侧有热门搜索与统计。</figcaption>
+      </figure>
+
+      <h3>2. 第一次查询：一个"空结果"的反面教材</h3>
+      <p>我最初想用一个教学站点 <code>testfire.net</code> 做演示，输入：</p>
+      <pre><code>site:testfire.net</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/ze_site_testfire_0.png" alt="site:testfire.net 返回 0 条结果" />
+        <figcaption>图2　结果栏明确写着"最近一年数据：0 条"。ZoomEye 免费档默认只查近一年索引，这种小型教学站近期没被重新测绘，所以空。</figcaption>
+      </figure>
+
+      <p>空结果其实是个好教材：它说明<strong>测绘引擎的覆盖是按"近期是否被扫到"决定的，并不是全网每个角落都实时可见</strong>。后来我换用大型站点，就能看到典型资产分布了。</p>
+
+      <h3>3. 第二个坑：查询整体被引号包裹</h3>
+      <p>中间我还犯过一个典型错误——把整条查询套进英文双引号：</p>
+      <pre><code>"service:ftp port:21"</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/ze_quote_0.png" alt="整条查询被引号包裹导致 0 结果" />
+        <figcaption>图3　顶部标签显示查询被当成一个完整的字面字符串（联想提示 <code>http.body="service:ftp port:21"</code> 即证据），引擎在"网页正文里原样找这串文字"，自然什么都搜不到。</figcaption>
+      </figure>
+
+      <p><strong>规则记牢</strong>：引号只在包"带空格的词组"时用（例如 <code>app:"Apache httpd"</code>，应用名里有空格）；像 <code>service:</code> / <code>port:</code> / <code>site:</code> 这类<strong>语法前缀永远不包引号</strong>，否则整句会被当成字面量。</p>
+
+      <h3>4. 正确示范：按服务 + 端口检索</h3>
+      <p>去掉引号，直接输入：</p>
+      <pre><code>service:ftp port:21</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/ze_ftp_result.png" alt="service:ftp port:21 命中 6263 万条结果" />
+        <figcaption>图4　命中 62,633,938 条（近一年约 670 万条）。右侧地图、协议统计一目了然；第一条结果 54.232.5.168:21 的 Banner 正是 vsFTPd 3.0.2——刚好和前一篇笑脸漏洞的主角呼应。</figcaption>
+      </figure>
+
+      <h3>5. 多条件组合：指纹 + 国家</h3>
+      <pre><code>app:"Apache httpd" country:"China"</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/ze_apache_china.png" alt="app Apache httpd 且位于中国的检索结果" />
+        <figcaption>图5　99,394,103 条结果。列表中那台香港服务器的响应头 <code>Server: Apache/2.4</code> 清晰可见，证明多条件组合检索可用。</figcaption>
+      </figure>
+
+      <h3>6. 按 Banner 搜服务</h3>
+      <pre><code>banner:vsftpd</code></pre>
+
+      <figure class="post-figure">
+        <img src="../assets/img/ze_banner_vsftpd.png" alt="banner:vsftpd 命中 344 万条" />
+        <figcaption>图6　3,448,307 条结果（近一年约 47 万）。罗马尼亚、美国的 vsFTPd 3.0.3 Banner 都直接列出来了——"按 Banner 内容反查运行了什么软件"正是测绘引擎的核心能力。</figcaption>
+      </figure>
+
+      <p class="note">插曲：图6 之前我误把 <code>"banner:vsftpd"</code> 整体加引号，只歪打正着命中成都一台 vsFTPd 3.3.3（见下一张）。这反而印证了引擎对"查询语义"的严格区分——引号一加，就从"语法检索"退化成"正文字面匹配"。</p>
+
+      <figure class="post-figure">
+        <img src="../assets/img/ze_banner_quote.png" alt="引号误用只命中 1 条的截图" />
+        <figcaption>图7　误将语法整体加引号后，只命中 1 条（成都那台 vsFTPd 3.3.3）。保留这张，是为了记下"语义理解"这一课。</figcaption>
+      </figure>
+
+      <h3>7. 资产详情页：一台机器的完整画像</h3>
+      <p>点结果卡片里<strong>蓝色的 IP 文字</strong>（而不是标题链接），进入 ZoomEye 站内资产详情页：</p>
+
+      <figure class="post-figure">
+        <img src="../assets/img/ze_detail.png" alt="ZoomEye 单 IP 资产详情页" />
+        <figcaption>图8　这台罗马尼亚服务器（AS8708）开放了 35 个端口，地图定位、ASN、Banner 历史一应俱全。一个 IP 暴露几十个服务，本身就是"暴露面过大"的活教材。</figcaption>
+      </figure>
+
+      <p><strong>一个安全提醒</strong>：结果列表里另有一类"直连目标 IP"的外部链接。有一次我不小心点了它，浏览器直接去访问那台第三方服务器（FTP 服务当然不会渲染网页，所以是空白页）。<strong>这种"点出去"的动作，性质已经和"在引擎里被动查索引"完全不同了</strong>——前者是直接接触第三方资产。截图留念后立刻关掉了标签页，绝不输入任何东西。这提醒我们：测绘查询 = 看公开档案；主动直连 = 另一种行为边界。</p>
+
+      <figure class="post-figure">
+        <img src="../assets/img/ze_direct_ip.png" alt="误点直连 IP 链接导致空白页" />
+        <figcaption>图9　误点直连链接后浏览器直接访问第三方服务器（空白）。这页无关技术，但它是一次关于"行为边界"的真实提醒。</figcaption>
+      </figure>
+
+      <h2>三、子域名收集（被动手法）</h2>
+      <p>子域名收集常是资产梳理的第一步：一个主域名下藏着的 <code>demo.</code>、<code>api.</code>、<code>test.</code> 往往是防护最薄弱的入口。我用两种<strong>被动数据源</strong>来做，它们不向目标发任何包。</p>
+
+      <h3>方法一：证书透明度（crt.sh）</h3>
+      <p>HTTPS 证书签发会进入公开的 CT（Certificate Transparency）日志。只要一个站点申请过 <code>*.testfire.net</code> 的证书，就会被记下来：</p>
+      <pre><code>https://crt.sh/?q=%25.testfire.net</code></pre>
+      <p><code>%25</code> 是通配符 <code>%</code> 的 URL 转义，意思是"匹配该域名下所有子域"。</p>
+
+      <figure class="post-figure">
+        <img src="../assets/img/crtsh_testfire.png" alt="crt.sh 查询 testfire.net 子域证书记录" />
+        <figcaption>图10　证书库里 <code>demo.testfire.net</code> 从 2019 到 2026 年反复签发。签发即公开——一次查询就能拉出多年的资产历史，这就是证书透明度的威力。</figcaption>
+      </figure>
+
+      <h3>方法二：搜索引擎语法（Bing）</h3>
+      <p>另一条路是从搜索引擎的已索引页面里找子域。百度对 <code>*</code> 通配支持差、谷歌国内访问不稳，<strong>Bing</strong> 对 <code>site:</code> 子域查询支持最顺手：</p>
+      <pre><code>site:*.testfire.net -site:www.testfire.net</code></pre>
+      <p>减号 = 排除 www 这个最常见子域，避免结果被刷屏。</p>
+
+      <figure class="post-figure">
+        <img src="../assets/img/bing_testfire.png" alt="Bing 搜索 testfire.net 子域返回无结果" />
+        <figcaption>图11　Bing 返回"没有与此相关的结果"。这反而和图10 形成对比：CT 日志记录所有签过证的子域，而搜索引擎只索引能被爬虫发现的页面——testfire 这种低流量站点页面未被收录。</figcaption>
+      </figure>
+
+      <p><strong>两种被动源互为补充</strong>：证书库能看到历史、全量，但只对 HTTPS 资产有效；搜索引擎能看到当前可被访问的页面，却依赖爬虫覆盖。把两者放一起看，才能更接近一个域名的真实子域版图。</p>
+
+      <h2>四、被动收集 vs 主动探测</h2>
+      <p>这次实操刻意只用了被动手法，理由不止"省事"，更是<strong>合规边界</strong>：</p>
+      <ul>
+        <li><strong>被动收集</strong>：查公开索引（测绘库）、查公开证书（crt.sh）、查公开页面（搜索引擎）——本质是"看别人已经公开的数据"，风险低，是资产自查、暴露面评估的常规动作；</li>
+        <li><strong>主动探测</strong>：子域名爆破（如 <code>gobuster</code> / <code>subfinder</code> 字典枚举）、端口扫描、漏洞扫描——这些会向目标发送流量，只能在<strong>明确授权</strong>的资产上做；</li>
+        <li><strong>直连第三方</strong>：比主动探测更接近"接触"，即便只是打开一个 IP 链接，也应避免——图9 就是一次值得记住的教训。</li>
+      </ul>
+      <p>对初学者来说，先把"被动收集"这一套摸熟，既能完成大部分资产梳理需求，又始终把行为停在安全区。</p>
+
+      <h2>五、小结</h2>
+      <p>这次从"盘点引擎"到"跑通 ZoomEye 检索"再到"用两种被动手法收子域"，把网络空间测绘这条线走了一遍：</p>
+      <ul>
+        <li><strong>引擎</strong>：ZoomEye / Shodan / FOFA / Censys / Hunter / Quake / Netlas 思路同源，差异在数据与开放度；</li>
+        <li><strong>语法</strong>：前缀不包引号，词组才加引号——一个引号之差，检索语义天壤之别；</li>
+        <li><strong>子域</strong>：证书透明度 + 搜索引擎索引，两种被动源互补，看清一个域名的暴露面；</li>
+        <li><strong>边界</strong>：被动看公开数据，主动探测须授权，直连第三方要避开。</li>
+      </ul>
+      <p>把公开数据用好，已经能回答很多安全问题——前提是，清楚地知道自己在"看"，而不是"碰"。</p>
+
+      <a class="back-link" href="../index.html">← 返回首页</a>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      © <span id="year">2026</span> Tiantiankaixin6666 · 由纯静态页面驱动 · Powered by GitHub Pages
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

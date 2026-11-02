@@ -2,6 +2,13 @@
 // file 相对于站点根目录；tags 为字符串数组；summary 为卡片摘要
 window.POSTS = [
   {
+    "file": "posts/zoomeye-subdomain.html",
+    "title": "ZoomEye 空间测绘与子域名收集实操",
+    "date": "2026-11-02",
+    "tags": ["网络安全", "网络空间测绘", "子域名收集", "原创"],
+    "summary": "动手盘点类 ZoomEye 的网络空间测绘引擎，用 ZoomEye 真实跑通 service/port/app/banner/country 多条件检索（含两个“0 结果”踩坑彩蛋），再用证书透明度（crt.sh）与搜索引擎语法两种被动手法收集子域名，并聊聊被动收集与主动探测的边界。"
+  },
+  {
     "file": "posts/pikachu-target.html",
     "title": "皮卡丘靶场搭建与首关通关：从 0 搭环境到读懂 XSS 源码",
     "date": "2026-11-01",
