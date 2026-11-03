@@ -1865,8 +1865,8 @@ html.reduce-motion .hud-float { animation: none !important; }
 .like-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--shadowc); }
 .like-heart { color: var(--red); font-size: 16px; line-height: 1; }
 .like-btn b { font-family: var(--px); font-size: 10px; letter-spacing: .02em; }
-.like-btn.liked { color: var(--red); border-color: var(--red); cursor: default; }
-.like-btn.liked:hover { transform: none; box-shadow: 4px 4px 0 var(--shadowc); }
+.like-btn.liked { color: var(--red); border-color: var(--red); }
+.like-btn.liked:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--shadowc); }
 .like-btn.liked .like-heart { animation: likePop .5s steps(4); }
 @keyframes likePop {
   0% { transform: scale(1); }

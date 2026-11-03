@@ -845,7 +845,7 @@
     }
   })();
 
-  /* ============ 10b. 点赞（全局计数） ============ */
+  /* ============ 10b. 点赞（可取消，全局计数） ============ */
   (function likes() {
     var btn = document.getElementById("like-btn");
     if (!btn) return;
@@ -854,56 +854,71 @@
     var labelEl = btn.querySelector(".like-label");
     var API = "https://abacus.jasoncameron.dev";
     var NS = "tiantiankaixin6666-github-io";
-    var KEY = "likes-" + slug;
-    var CACHE = "px:likecount:" + slug;
+    var LIKE_KEY = "likes-" + slug;
+    var UNLIKE_KEY = "unlikes-" + slug;
+    var LIKE_CACHE = "px:likecount:" + slug;
+    var UNLIKE_CACHE = "px:unlikecount:" + slug;
     var LIKED = "px:liked:" + slug;
 
-    var count = parseInt(safeGet("localStorage", CACHE) || "0", 10);
-    if (isNaN(count) || count < 0) count = 0;
-    function render(n) {
-      if (countEl) countEl.textContent = n < 100000 ? String(n) : fmt(n);
-    }
-    render(count);
+    var likes = parseInt(safeGet("localStorage", LIKE_CACHE) || "0", 10);
+    var unlikes = parseInt(safeGet("localStorage", UNLIKE_CACHE) || "0", 10);
+    if (isNaN(likes) || likes < 0) likes = 0;
+    if (isNaN(unlikes) || unlikes < 0) unlikes = 0;
 
-    fetch(API + "/get/" + NS + "/" + encodeURIComponent(KEY), { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (d && typeof d.value === "number") {
-          count = d.value;
-          render(count);
-          safeSet("localStorage", CACHE, String(count));
-        }
-      })
-      .catch(function () {});
+    function total() { return Math.max(0, likes - unlikes); }
+    function render() {
+      if (countEl) countEl.textContent = total() < 100000 ? String(total()) : fmt(total());
+    }
+    render();
+
+    function getCount(key) {
+      return fetch(API + "/get/" + NS + "/" + encodeURIComponent(key), { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { return d && typeof d.value === "number" ? d.value : null; })
+        .catch(function () { return null; });
+    }
+    function hit(key) {
+      return fetch(API + "/hit/" + NS + "/" + encodeURIComponent(key), { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { return d && typeof d.value === "number" ? d.value : null; })
+        .catch(function () { return null; });
+    }
+
+    // 显示 = 赞数 - 取消赞数（Abacus 只能加，用两个计数器实现可取消）
+    Promise.all([getCount(LIKE_KEY), getCount(UNLIKE_KEY)]).then(function (vals) {
+      if (vals[0] !== null) likes = vals[0];
+      if (vals[1] !== null) unlikes = vals[1];
+      safeSet("localStorage", LIKE_CACHE, String(likes));
+      safeSet("localStorage", UNLIKE_CACHE, String(unlikes));
+      render();
+    });
 
     var liked = safeGet("localStorage", LIKED) === "1";
-    function markLiked() {
-      btn.classList.add("liked");
-      btn.disabled = true;
-      btn.setAttribute("aria-pressed", "true");
-      if (labelEl) labelEl.textContent = "已赞";
+    function paint() {
+      btn.classList.toggle("liked", liked);
+      btn.setAttribute("aria-pressed", liked ? "true" : "false");
+      btn.setAttribute("title", liked ? "点击取消点赞" : "点赞");
+      if (labelEl) labelEl.textContent = liked ? "已赞" : "点赞";
     }
-    if (liked) markLiked();
+    paint();
 
     on(btn, "click", function () {
-      if (liked) return;
-      liked = true;
-      safeSet("localStorage", LIKED, "1");
-      markLiked();
-      fetch(API + "/hit/" + NS + "/" + encodeURIComponent(KEY), { cache: "no-store" })
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          if (d && typeof d.value === "number") {
-            count = d.value;
-            render(count);
-            safeSet("localStorage", CACHE, String(count));
-          }
-        })
-        .catch(function () {
-          count += 1;
-          render(count);
-          safeSet("localStorage", CACHE, String(count));
+      liked = !liked;
+      safeSet("localStorage", LIKED, liked ? "1" : "0");
+      paint();
+      if (liked) {
+        hit(LIKE_KEY).then(function (v) {
+          if (v !== null) { likes = v; safeSet("localStorage", LIKE_CACHE, String(likes)); }
+          else { likes += 1; }
+          render();
         });
+      } else {
+        hit(UNLIKE_KEY).then(function (v) {
+          if (v !== null) { unlikes = v; safeSet("localStorage", UNLIKE_CACHE, String(unlikes)); }
+          else { unlikes += 1; }
+          render();
+        });
+      }
     });
   })();
 
