@@ -607,6 +607,39 @@
     renderGrid();
   }
 
+  /* ============ 8b. 网站访问数（Abacus 全局 + 本地兜底） ============ */
+  (function visits() {
+    var el = doc.getElementById("stat-visits");
+    var VISITS_KEY = "px:visits";
+    var LAST_KEY = "px:visits:last";
+
+    var local = parseInt(safeGet("localStorage", VISITS_KEY) || "0", 10);
+    if (isNaN(local) || local < 0) local = 0;
+    local += 1;
+    safeSet("localStorage", VISITS_KEY, String(local));
+
+    var cached = parseInt(safeGet("localStorage", LAST_KEY) || "0", 10);
+    if (isNaN(cached) || cached < 0) cached = 0;
+
+    function render(n) {
+      if (!el) return;
+      el.textContent = n < 100000 ? String(n) : fmt(n);
+    }
+    render(Math.max(local, cached));
+
+    if (!("fetch" in window)) return;
+    // 全局访问数：每个页面加载计一次
+    fetch("https://abacus.jasoncameron.dev/hit/tiantiankaixin6666-github-io/site-visits", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && typeof d.value === "number") {
+          render(d.value);
+          safeSet("localStorage", LAST_KEY, String(d.value));
+        }
+      })
+      .catch(function () { /* 保持本地兜底数字 */ });
+  })();
+
   /* ============ 9. 统计 + 分数 ============ */
   (function stats() {
     var days = Math.max(1, Math.floor((Date.now() - new Date("2026-09-28T00:00:00").getTime()) / 86400000));

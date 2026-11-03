@@ -1834,3 +1834,9 @@ html.reduce-motion .hud-score.pop,
 html.reduce-motion .hud-score.crit,
 html.reduce-motion .hud,
 html.reduce-motion .hud-float { animation: none !important; }
+
+
+/* 统计栏新增「访问」后改为 5 列 */
+.stats { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 900px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 620px) { .stats { grid-template-columns: 1fr 1fr; } }
