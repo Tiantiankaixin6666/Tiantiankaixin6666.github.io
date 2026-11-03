@@ -1,50 +1,107 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="night">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>关于我 · Tiantiankaixin6666 的技术博客</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
-</head>
-<body>
-  <header class="site-header">
-    <nav class="nav">
-      <a class="brand" href="index.html">Tiantiankaixin6666</a>
-      <div class="nav-links">
-        <a href="index.html">首页</a>
-        <a href="about.html">关于</a>
-        <button class="theme-btn" id="theme-toggle" aria-label="切换主题">🌙</button>
-      </div>
-    </nav>
-  </header>
+  <title>关于这个玩家 · 像素冒险</title>
+  <meta name="description" content="像素风个人博客：8-bit 像素字体、星空平铺、精灵图标与像素切换动效。" />
+  <meta name="theme-color" content="#1a1c2c" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/pixel.css?v=20261103j" />
+  <script>
+    try {
+      var t = localStorage.getItem("px:theme");
+      if (t === "day") document.documentElement.setAttribute("data-theme", "day");
+      // 动态特效默认开启；只有用户手动关闭时才加 reduce-motion
+      if (localStorage.getItem("px:motion") === "off") {
+        document.documentElement.classList.add("reduce-motion");
+      }
+    } catch (e) {}
+  </script>
+<meta name="generator" content="Hexo 8.1.2"></head>
 
-  <main class="container about">
-    <h1>关于</h1>
-    <p>这里是一些随手记下的笔记与想法，想到什么写什么。</p>
+<body class="page-page">
 
-    <h2>这里会写什么</h2>
-    <ul>
-      <li>学习过程中的笔记与总结</li>
-      <li>踩过的坑和绕过的弯路</li>
-      <li>一些零散的思考</li>
-    </ul>
-
-    <h2>联系我</h2>
-    <ul>
-      <li>GitHub：<a href="https://github.com/Tiantiankaixin6666" target="_blank" rel="noopener">@Tiantiankaixin6666</a></li>
-    </ul>
-
-    <p>这个博客用纯静态 HTML/CSS/JS 搭建，托管在 GitHub Pages 上，没有数据库、没有后台，简单可靠。</p>
-
-    <a class="back-link" href="index.html">← 返回首页</a>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      © <span id="year">2026</span> Tiantiankaixin6666 · 由纯静态页面驱动 · Powered by GitHub Pages
+  <div id="boot" aria-hidden="true">
+    <div class="boot-box">
+      <div class="boot-title">像素冒险</div>
+      <div class="boot-sub">正在读取存档…</div>
+      <div class="boot-track"><div class="boot-bar" id="boot-bar"></div></div>
+      <div class="boot-pct" id="boot-pct">000%</div>
     </div>
-  </footer>
+  </div>
 
-  <script src="assets/js/main.js"></script>
+  <div id="wipe" aria-hidden="true"></div>
+  <div id="slidefx" aria-hidden="true"></div>
+  <div id="pxcursor" aria-hidden="true"></div>
+  <canvas id="pxstars" aria-hidden="true"></canvas>
+
+  <a class="skip-link" href="#main">跳到主内容</a>
+
+  
+<header class="site-header">
+  <div class="hud">
+    <div class="hud-item">
+      <span class="hud-label">生命</span>
+      <button class="hud-bar" id="hp-bar" type="button" aria-label="生命值 10/10，点击扣血" title="点击扣血，扣完自动回满"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button>
+    </div>
+    <a class="brand" href="/">天天<span class="gold">开心</span></a>
+    <div class="hud-item">
+      <span class="hud-label">分数</span>
+      <button class="hud-score" id="score" type="button" aria-label="分数，点击加分" title="点击加分：连击 ≥5 双倍，暴击再翻倍，无上限">000000</button>
+    </div>
+  </div>
+  <nav class="nav" aria-label="主导航">
+    <a href="/" class="">任务日志</a>
+    <a href="/#quests">分类</a>
+    <a href="/#tagbar">标签</a>
+    <a href="/about.html" class="active">关于</a>
+    <button id="theme-toggle" type="button">☀ 白天</button>
+  </nav>
+</header>
+
+
+  <main class="about-wrap" id="main">
+  <article class="about-card reveal">
+    <p class="article-kicker">▸ 玩家卡</p>
+    <h1>关于这个玩家</h1>
+    <p>这里是一些随手记下的笔记与想法，想到什么写什么。像在玩一局长期存档的 RPG：一路打怪、爆装备、写攻略。</p>
+<h2 id="▸-这里会写什么"><a href="#▸-这里会写什么" class="headerlink" title="▸ 这里会写什么"></a>▸ 这里会写什么</h2><ul>
+<li>网络安全与渗透实验的实战记录</li>
+<li>网络抓包、协议分析与踩坑复盘</li>
+<li>算法学习笔记与零散思考</li>
+</ul>
+<h2 id="▸-联系我"><a href="#▸-联系我" class="headerlink" title="▸ 联系我"></a>▸ 联系我</h2><ul>
+<li>GitHub：<a target="_blank" rel="noopener" href="https://github.com/Tiantiankaixin6666">https://github.com/Tiantiankaixin6666</a></li>
+</ul>
+<h2 id="▸-这个站怎么做的"><a href="#▸-这个站怎么做的" class="headerlink" title="▸ 这个站怎么做的"></a>▸ 这个站怎么做的</h2><p>纯静态 HTML &#x2F; CSS &#x2F; 原生 JS，用 <strong>Hexo</strong> 生成，托管在 GitHub Pages 上：没有数据库、没有后台，只有一堆像素、一个星空画布和几个硬阴影。</p>
+<p>阅读数保存在你自己的浏览器里（localStorage），换设备不会同步——这是静态站的取舍，换来的是零成本、零依赖。</p>
+<h2 id="▸-交互清单"><a href="#▸-交互清单" class="headerlink" title="▸ 交互清单"></a>▸ 交互清单</h2><ul>
+<li>移动鼠标：星野视差、像素光标拖尾、卡片倾斜聚光</li>
+<li>悬停卡片：精灵图标翻转、像素抬升</li>
+<li>点击导航：像素幕帘转场；刷新：像素进度条加载</li>
+<li>背包里可开 &#x2F; 关「魔法光标」与「白天模式」</li>
+</ul>
+
+    <div class="article-actions">
+      <a class="article-back" href="/">◄ 返回任务日志</a>
+    </div>
+  </article>
+</main>
+
+
+  
+<footer class="site-footer">
+  <p>存档完成 ▸ © <span id="year">2026</span> 天天开心 · 像素冒险</p>
+  <p>纯 HTML / CSS / JS 制作 · 由 Hexo 生成</p>
+</footer>
+
+<script>window.POSTS = [{"file":"/posts/pikachu-target.html","title":"皮卡丘靶场搭建与首关通关：从 0 搭环境到读懂 XSS 源码","date":"2026-11-01","tags":["原创","网络安全","靶场","XSS","源码分析"],"summary":"在 Kali 上用 LAMP 搭建 Pikachu 漏洞练习平台，亲手通关反射型 XSS，并深入源码分析漏洞成因（用户输入未转义直接拼 HTML）与修复方案（htmlspecialchars 输出编码）。含搭建白屏排错。"},{"file":"/posts/curl-shicao.html","title":"用 curl 亲手摸一摸 HTTP：5 条命令看懂请求与响应","date":"2026-10-31","tags":["网络","原创","HTTP","工具"],"summary":"在 Windows 自带的 cmd 里用 5 条真实 curl 命令摸 HTTP：看响应头、跟随重定向、发 POST、调 GitHub API、测耗时，每条都配真实截图与逐行解读。"},{"file":"/posts/smiley-poc.html","title":"笑脸漏洞 PoC 实战：一个 :) 拿下 root shell（CVE-2011-2523）","date":"2026-10-31","tags":["原创","网络安全","渗透实验","Python"],"summary":"用 Python 写 vsftpd 2.3.4 笑脸后门检测 PoC，在 Kali + Metasploitable2 授权实验环境里四步拿到 root：指纹扫描、nc 触发、连 6200 验证，含源码截图与四个实战踩坑。"},{"file":"/posts/qq-liuliang-fenxi.html","title":"用 Wireshark 看 QQ 流量：它走 TCP 还是 UDP，内容加密了吗","date":"2026-10-19","tags":["网络","抓包","原创"],"summary":"自己抓一份 QQ 真实流量，用会话统计、信息熵和文件头特征搜索，回答三个问题：TCP 还是 UDP、加密还是明文、能否从抓包恢复明文文件。"},{"file":"/posts/dengbao2-0.html","title":"我对等保2.0的理解","date":"2026-09-28","tags":["网络安全"],"summary":"等保2.0 是什么、法律地位如何、核心思想“一个中心三重防护”、保护对象与技术管理要点，以及它和等保1.0 的主要区别。"},{"file":"/posts/suanfa-rumen.html","title":"算法入门：它到底是什么，又该怎么衡量","date":"2026-09-28","tags":["原创","算法"],"summary":"原创。从生活化例子讲清算法是什么，用大 O 表示法衡量好坏，并用「两数之和」的暴力 vs 哈希、以及二分查找，体会不同解法的效率差距。"}];</script>
+<script src="/js/pixel.js?v=20261103j"></script>
+
+
 </body>
 </html>
