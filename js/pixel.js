@@ -507,7 +507,12 @@
       });
     } else {
       grid.innerHTML = list.map(tileHTML).join("");
-      observeReveals(grid);
+      // 搜索/筛选后卡片已经重新生成：必须立即揭示，
+      // 不能再等 IntersectionObserver（否则会只剩计数、没有卡片）
+      $$(".tile", grid).forEach(function (el, i) {
+        if (reduce) { el.classList.add("is-visible"); return; }
+        setTimeout(function () { el.classList.add("is-visible"); }, Math.min(i * 35, 280));
+      });
     }
     var rc = $("#result-count");
     if (rc) {
