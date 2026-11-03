@@ -845,6 +845,174 @@
     }
   })();
 
+  /* ============ 10b. 点赞（全局计数） ============ */
+  (function likes() {
+    var btn = document.getElementById("like-btn");
+    if (!btn) return;
+    var slug = btn.getAttribute("data-slug") || "";
+    var countEl = document.getElementById("like-count");
+    var labelEl = btn.querySelector(".like-label");
+    var API = "https://abacus.jasoncameron.dev";
+    var NS = "tiantiankaixin6666-github-io";
+    var KEY = "likes-" + slug;
+    var CACHE = "px:likecount:" + slug;
+    var LIKED = "px:liked:" + slug;
+
+    var count = parseInt(safeGet("localStorage", CACHE) || "0", 10);
+    if (isNaN(count) || count < 0) count = 0;
+    function render(n) {
+      if (countEl) countEl.textContent = n < 100000 ? String(n) : fmt(n);
+    }
+    render(count);
+
+    fetch(API + "/get/" + NS + "/" + encodeURIComponent(KEY), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && typeof d.value === "number") {
+          count = d.value;
+          render(count);
+          safeSet("localStorage", CACHE, String(count));
+        }
+      })
+      .catch(function () {});
+
+    var liked = safeGet("localStorage", LIKED) === "1";
+    function markLiked() {
+      btn.classList.add("liked");
+      btn.disabled = true;
+      btn.setAttribute("aria-pressed", "true");
+      if (labelEl) labelEl.textContent = "已赞";
+    }
+    if (liked) markLiked();
+
+    on(btn, "click", function () {
+      if (liked) return;
+      liked = true;
+      safeSet("localStorage", LIKED, "1");
+      markLiked();
+      fetch(API + "/hit/" + NS + "/" + encodeURIComponent(KEY), { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && typeof d.value === "number") {
+            count = d.value;
+            render(count);
+            safeSet("localStorage", CACHE, String(count));
+          }
+        })
+        .catch(function () {
+          count += 1;
+          render(count);
+          safeSet("localStorage", CACHE, String(count));
+        });
+    });
+  })();
+
+  /* ============ 10c. 评论区（GitHub Issues，零后端） ============ */
+  (function comments() {
+    var sec = document.getElementById("comments");
+    if (!sec) return;
+    var slug = sec.getAttribute("data-slug") || "";
+    var list = document.getElementById("comment-list");
+    var form = document.getElementById("comment-form");
+    var text = document.getElementById("comment-text");
+    var ghLink = document.getElementById("comment-gh");
+    var countEl = document.getElementById("comment-count");
+    if (!list || !form) return;
+
+    var OWNER = "Tiantiankaixin6666";
+    var REPO = "Tiantiankaixin6666.github.io";
+    var prefix = "[评论] " + slug;
+    var newUrl = "https://github.com/" + OWNER + "/" + REPO + "/issues/new";
+    var listUrl = "https://github.com/" + OWNER + "/" + REPO + "/issues?q=" +
+      encodeURIComponent('is:issue "' + prefix + '"');
+    if (ghLink) ghLink.href = listUrl;
+
+    function el(tag, cls, txt) {
+      var n = doc.createElement(tag);
+      if (cls) n.className = cls;
+      if (txt != null) n.textContent = txt;
+      return n;
+    }
+
+    function render(items) {
+      list.innerHTML = "";
+      if (!items.length) {
+        list.appendChild(el("p", "comment-empty", "还没有评论，来抢第一楼。"));
+        if (countEl) countEl.textContent = "";
+        return;
+      }
+      if (countEl) countEl.textContent = "(" + items.length + ")";
+      items.forEach(function (it) {
+        var wrap = el("div", "comment-item");
+        var head = el("div", "comment-head");
+        if (it.user && it.user.avatar_url) {
+          var img = doc.createElement("img");
+          img.className = "comment-avatar";
+          img.src = it.user.avatar_url;
+          img.alt = "";
+          img.loading = "lazy";
+          head.appendChild(img);
+        }
+        var who = el("a", "comment-user", it.user ? it.user.login : "匿名");
+        who.href = it.user ? it.user.html_url : "#";
+        who.target = "_blank";
+        who.rel = "noopener";
+        head.appendChild(who);
+        head.appendChild(el("span", "comment-time", (it.created_at || "").slice(0, 10)));
+        wrap.appendChild(head);
+
+        var body = (it.body || "").replace(/\n\n---\n来自：[\s\S]*$/, "");
+        wrap.appendChild(el("div", "comment-body", body));
+
+        var src = el("a", "comment-src", "查看原文 ↗");
+        src.href = it.html_url;
+        src.target = "_blank";
+        src.rel = "noopener";
+        wrap.appendChild(src);
+        list.appendChild(wrap);
+      });
+    }
+
+    fetch("https://api.github.com/repos/" + OWNER + "/" + REPO +
+          "/issues?state=all&per_page=100&sort=created&direction=asc",
+          { headers: { "Accept": "application/vnd.github+json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (arr) {
+        if (!Array.isArray(arr)) throw new Error("bad response");
+        render(arr.filter(function (it) {
+          return !it.pull_request && (it.title || "").indexOf(prefix) === 0;
+        }));
+      })
+      .catch(function () {
+        list.innerHTML = "";
+        var p = el("p", "comment-empty", "评论加载失败，");
+        var a = el("a", "", "去 GitHub 查看");
+        a.href = listUrl;
+        a.target = "_blank";
+        a.rel = "noopener";
+        p.appendChild(a);
+        p.appendChild(doc.createTextNode("。"));
+        list.appendChild(p);
+      });
+
+    on(form, "submit", function (e) {
+      e.preventDefault();
+      var content = (text.value || "").trim();
+      if (!content) { if (text) text.focus(); return; }
+      var pageTitle = document.title.replace(/\s*·\s*像素冒险\s*$/, "");
+      var title = prefix + " · " + pageTitle;
+      var body = content + "\n\n---\n来自：" + location.href + "\n（通过博客评论区提交）";
+      var url = newUrl + "?title=" + encodeURIComponent(title) + "&body=" + encodeURIComponent(body);
+      var a = doc.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      doc.body.appendChild(a);
+      a.click();
+      doc.body.removeChild(a);
+    });
+  })();
+
   /* ============ 11. 主题 / 光标开关 ============ */
   (function controls() {
     var THEME_KEY = "px:theme";
